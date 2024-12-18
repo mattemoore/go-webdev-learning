@@ -1,0 +1,28 @@
+package main
+
+templ breedsListComponent(dogBreeds []DogBreed) {
+	<div>
+		<ul>
+			for _, item := range dogBreeds {
+				<li>{ item.Name }</li>
+			}
+		</ul>
+	</div>
+}
+
+templ errorComponent(err string) {
+	<div>Error: { err } </div>
+}
+
+templ page(contents templ.Component) {
+	<html>
+		<head>
+			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+		</head>
+		<body>
+			<div id="contentWrapper">
+				@contents
+			</div>
+		</body>
+	</html>
+}
