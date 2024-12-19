@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"sort"
+	"strconv"
 )
 
 type DogBreed struct {
@@ -23,14 +21,26 @@ func (db BreedsByName) Swap(i, j int)      { db[i], db[j] = db[j], db[i] }
 var dogBreeds BreedsByName
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	dogBreedsComponent := breedsListComponent(dogBreeds)
+	params := r.URL.Query()
+	pageNum := 1
+	pageSize := 10
+	if params.Get("pageNum") != "" {
+		pageNum, _ = strconv.Atoi(params.Get("pageNum"))
+	}
+	if params.Get("pageSize") != "" {
+		pageSize, _ = strconv.Atoi(params.Get("pageSize"))
+	}
+	dogBreedsComponent := breedsListComponent(dogBreeds, pageNum, pageSize)
 	page(dogBreedsComponent).Render(r.Context(), w)
 }
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {}
 
 func main() {
 
 	// Register handlers
 	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/favicon.ico", faviconHandler)
 
 	// Practice golang HTTP and JSON unmarshalling
 	var err error
@@ -41,38 +51,4 @@ func main() {
 
 	// Listen and serve
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func getDogBreeds() ([]DogBreed, error) {
-	dogBreeds := []DogBreed{}
-
-	// Request list of dog breeds
-	resp, err := http.Get("https://dog.ceo/api/breeds/list/all")
-	if err != nil {
-		log.Println(fmt.Println(err))
-		return dogBreeds, err
-	}
-
-	// Read response
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(fmt.Println(err))
-		return dogBreeds, err
-	}
-
-	// Convert JSON response into map with breeds as keys and sub breeds as values
-	var result map[string]any
-	json.Unmarshal(body, &result)
-	message := result["message"].(map[string]any)
-	for key, value := range message {
-		subBreeds := make([]string, 0)
-		for _, v := range value.([]any) {
-			subBreeds = append(subBreeds, v.(string))
-		}
-		dogBreeds = append(dogBreeds, DogBreed{Name: key, SubBreeds: subBreeds})
-	}
-
-	sort.Sort(BreedsByName(dogBreeds))
-	return dogBreeds, nil
 }
