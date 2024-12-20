@@ -15,15 +15,15 @@ templ breedsListComponent(dogBreeds []DogBreed, pageNum int, pageSize int) {
 		numPages := (len(dogBreeds) + pageSize - 1) / pageSize
 		urlFormat := "\\home?pageNum=%d&pageSize%d"
 	}}
-	<div id="cardContainer" class="container d-flex flex-row">
+	<div id="cardContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, breed := range dogBreeds[start:end] {
-			<div class="m1">
+			<div class="m-2">
 				@cardComponent(breed.Name, breed.Name)
 			</div>
 		}
 	</div>
-	if len(dogBreeds) % pageSize > 1 {
-		<div class="container">
+	if numPages > 1 {
+		<div class="container m-4">
 			@paginationComponent(pageNum, numPages, pageSize, urlFormat)
 		</div>
 	}
@@ -32,15 +32,11 @@ templ breedsListComponent(dogBreeds []DogBreed, pageNum int, pageSize int) {
 templ paginationComponent(pageNum int, numPages int, pageSize int, pageUrlFormat string) {
 	<nav aria-label="Page navigation example">
 		<ul class="pagination">
-			if pageNum > 1 {
-				<li class="page-item"><a class="page-link" href={ templ.URL(fmt.Sprintf(pageUrlFormat, pageNum-1, pageSize)) }>Previous</a></li>
-			}
+			<li class="page-item"><a class={ "page-link", templ.KV("disabled", pageNum == 1) } href={ templ.URL(fmt.Sprintf(pageUrlFormat, pageNum-1, pageSize)) } role="button">Previous</a></li>
 			for i := 1; i <= numPages; i++ {
-				<li class="page-item"><a class="page-link" href={ templ.URL(fmt.Sprintf(pageUrlFormat, i, pageSize)) }>{ strconv.Itoa(i) }</a></li>
+				<li class="page-item"><a class={ "page-link", templ.KV("disabled", i == pageNum) } href={ templ.URL(fmt.Sprintf(pageUrlFormat, i, pageSize)) } role="button">{ strconv.Itoa(i) }</a></li>
 			}
-			if pageNum < numPages {
-				<li class="page-item"><a class="page-link" href={ templ.URL(fmt.Sprintf(pageUrlFormat, pageNum+1, pageSize)) }>Next</a></li>
-			}
+			<li class="page-item"><a class={ "page-link", templ.KV("disabled", pageNum == numPages) } href={ templ.URL(fmt.Sprintf(pageUrlFormat, pageNum+1, pageSize)) } role="button">Next</a></li>
 		</ul>
 	</nav>
 }
@@ -66,11 +62,13 @@ templ page(contents templ.Component) {
 			<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 		</head>
 		<body>
-			<div id="navWrapper">
-				@navbar()
-			</div>
-			<div id="contentWrapper">
-				@contents
+			<div id="siteWrapper" class="container w-80">
+				<div id="navWrapper">
+					@navbar()
+				</div>
+				<div id="contentWrapper">
+					@contents
+				</div>
 			</div>
 			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 		</body>

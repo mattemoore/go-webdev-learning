@@ -40,5 +40,6 @@ func getDogBreeds() ([]DogBreed, error) {
 	}
 
 	sort.Sort(BreedsByName(dogBreeds))
+	fmt.Printf("Dog breeds: %v\n", dogBreeds)
 	return dogBreeds, nil
 }

@@ -2,8 +2,9 @@
 
 Learning go webdev, htmx and templ.
 
-# build and watch
+# build and run
+
 Run in dev container
-`go install github.com/a-h/templ/cmd/templ@latest`
-`go install github.com/air-verse/air@latest`
-`air`
+`go build`
+`templ generate`
+`go run .`
