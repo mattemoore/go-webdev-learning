@@ -7,21 +7,18 @@ import (
 	"strconv"
 )
 
-type DogBreed struct {
-	Name      string
-	SubBreeds []string
-}
-
-type BreedsByName []DogBreed
-
-func (db BreedsByName) Len() int           { return len(db) }
-func (db BreedsByName) Less(i, j int) bool { return db[i].Name < db[j].Name }
-func (db BreedsByName) Swap(i, j int)      { db[i], db[j] = db[j], db[i] }
-
-var dogBreeds BreedsByName
+var dogGroups []DogGroup
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
+	dogBreedsComponent := groupsListComponent(dogGroups)
+	page(dogBreedsComponent).Render(r.Context(), w)
+}
+
+func groupHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
+	groupID := params.Get("groupID")
+	w.Write([]byte(fmt.Sprintf("Group ID: %s\n", groupID)))
+
 	pageNum := 1
 	pageSize := 10
 	if params.Get("pageNum") != "" {
@@ -30,8 +27,11 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	if params.Get("pageSize") != "" {
 		pageSize, _ = strconv.Atoi(params.Get("pageSize"))
 	}
-	dogBreedsComponent := breedsListComponent(dogBreeds, pageNum, pageSize)
-	page(dogBreedsComponent).Render(r.Context(), w)
+	w.Write([]byte(fmt.Sprintf("Page number: %d\n", pageNum)))
+	w.Write([]byte(fmt.Sprintf("Page size: %d\n", pageSize)))
+
+	// TODO: Query api to get list of breeds for the breedID
+	// dogBreedsComponent := breedsListComponent(breedsList, pageNum, pageSize)
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {}
@@ -40,11 +40,12 @@ func main() {
 
 	// Register handlers
 	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/group/", groupHandler)
 	http.HandleFunc("/favicon.ico", faviconHandler)
 
 	// Practice golang HTTP and JSON unmarshalling
 	var err error
-	dogBreeds, err = getDogBreeds()
+	dogGroups, err = getDogGroups()
 	if err != nil {
 		log.Panic(fmt.Printf("Shutting down server:%s\n", err))
 	}

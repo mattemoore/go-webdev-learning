@@ -9,11 +9,36 @@ import (
 	"sort"
 )
 
-func getDogBreeds() ([]DogBreed, error) {
-	dogBreeds := []DogBreed{}
+func getDogGroups() ([]DogGroup, error) {
+	dogGroups := []DogGroup{}
+
+	resp, err := http.Get("https://dogapi.dog/api/v2/groups")
+	if err != nil {
+		log.Println(fmt.Println(err))
+		return dogGroups, err
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(fmt.Println(err))
+		return dogGroups, err
+	}
+
+	var data DogGroupsApiData
+	json.Unmarshal(body, &data)
+	for _, group := range data.Data {
+		dogGroups = append(dogGroups, group)
+	}
+	fmt.Printf("Dog groups: %v\n", dogGroups[0])
+	return dogGroups, nil
+}
+
+func getDogBreeds() ([]DogBreedAttributes, error) {
+	dogBreeds := []DogBreedAttributes{}
 
 	// Request list of dog breeds
-	resp, err := http.Get("https://dog.ceo/api/breeds/list/all")
+	resp, err := http.Get("https://dogapi.dog/api/v2/breeds")
 	if err != nil {
 		log.Println(fmt.Println(err))
 		return dogBreeds, err
@@ -28,18 +53,12 @@ func getDogBreeds() ([]DogBreed, error) {
 	}
 
 	// Convert JSON response into map with breeds as keys and sub breeds as values
-	var result map[string]any
-	json.Unmarshal(body, &result)
-	message := result["message"].(map[string]any)
-	for key, value := range message {
-		subBreeds := make([]string, 0)
-		for _, v := range value.([]any) {
-			subBreeds = append(subBreeds, v.(string))
-		}
-		dogBreeds = append(dogBreeds, DogBreed{Name: key, SubBreeds: subBreeds})
+	var data DogBreedsApiData
+	json.Unmarshal(body, &data)
+	for _, breed := range data.Data {
+		dogBreeds = append(dogBreeds, breed.Attributes)
 	}
-
 	sort.Sort(BreedsByName(dogBreeds))
-	fmt.Printf("Dog breeds: %v\n", dogBreeds)
+	fmt.Printf("Dog breeds: %v\n", dogBreeds[0])
 	return dogBreeds, nil
 }

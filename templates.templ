@@ -5,7 +5,25 @@ import (
 	"strconv"
 )
 
-templ breedsListComponent(dogBreeds []DogBreed, pageNum int, pageSize int) {
+type CardComponentData struct {
+	Title       string
+	Text        string
+	URL         string
+	ButtonLabel string
+	ImageURL    string
+}
+
+templ groupsListComponent(dogGroups []DogGroup) {
+	<div id="cardContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
+		for _, group := range dogGroups {
+			<div class="m-2">
+				@cardComponent(CardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/?groupID=%s", group.ID), "View Breeds", ""})
+			</div>
+		}
+	</div>
+}
+
+templ breedsListComponent(dogBreeds []DogBreedAttributes, pageNum int, pageSize int) {
 	{{
 		start := (pageNum - 1) * pageSize
 		end := start + pageSize
@@ -18,7 +36,7 @@ templ breedsListComponent(dogBreeds []DogBreed, pageNum int, pageSize int) {
 	<div id="cardContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, breed := range dogBreeds[start:end] {
 			<div class="m-2">
-				@cardComponent(breed.Name, breed.Name)
+				@cardComponent(CardComponentData{breed.Name, breed.Name, "foo", "View Breeds", "bar"})
 			</div>
 		}
 	</div>
@@ -41,13 +59,17 @@ templ paginationComponent(pageNum int, numPages int, pageSize int, pageUrlFormat
 	</nav>
 }
 
-templ cardComponent(title string, text string) {
+templ cardComponent(cardData CardComponentData) {
 	<div class="card" style="width: 18rem">
-		<img src="..." class="card-img-top" alt="..."/>
+		if (cardData.ImageURL != "") {
+			<img src={ cardData.ImageURL } class="card-img-top" alt="..."/>
+		}
 		<div class="card-body">
-			<h5 class="card-title">{ title }</h5>
-			<p class="card-text">{ text }</p>
-			<a href="#" class="btn btn-primary">Go somewhere</a>
+			<h5 class="card-title">{ cardData.Title }</h5>
+			if (cardData.Text != "") {
+				<p class="card-text">{ cardData.Text }</p>
+			}
+			<a href={ templ.SafeURL(cardData.URL) } class="btn btn-primary">{ cardData.ButtonLabel }</a>
 		</div>
 	</div>
 }
@@ -78,14 +100,14 @@ templ page(contents templ.Component) {
 templ navbar() {
 	<nav class="navbar navbar-expand-lg bg-body-tertiary">
 		<div class="container-fluid">
-			<a class="navbar-brand" href="#">Navbar</a>
+			<a class="navbar-brand" href="#">Golang, templ and HTMX</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 					<li class="nav-item">
-						<a class="nav-link active" aria-current="page" href="#">Home</a>
+						<a class="nav-link active" aria-current="page" href="/">Home</a>
 					</li>
 					<li class="nav-item">
 						<a class="nav-link" href="#">Link</a>
