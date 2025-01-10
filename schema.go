@@ -4,36 +4,34 @@ type DogGroupsApiData struct {
 	Data []DogGroup `json:"data"`
 }
 
+type DogGroupApiData struct {
+	Data DogGroup `json:"data"`
+}
+
+type DogBreeedApiData struct {
+	Data DogBreed `json:"data"`
+}
+
 type DogGroup struct {
 	ID            string                `json:"id"`
-	Type          string                `json:"type"`
 	Attributes    DogGroupAttributes    `json:"attributes"`
 	Relationships DogGroupRelationships `json:"relationships"`
 }
 
 type DogGroupRelationships struct {
-	DogGroupBreeds DogGroupBreeds `json:"breeds"`
+	BreedRelationships DogGroupBreedRelationships `json:"breeds"`
 }
 
-type DogGroupBreeds struct {
-	DogGroupBreedsData []DogGroupBreed `json:"data"`
-}
-
-type DogGroupBreed struct {
-	ID string `json:"id"`
+type DogGroupBreedRelationships struct {
+	DogBreeds []DogBreed `json:"data"`
 }
 
 type DogGroupAttributes struct {
 	Name string `json:"name"`
 }
 
-type DogBreedsApiData struct {
-	Data []DogBreed `json:"data"`
-}
-
 type DogBreed struct {
 	ID         string             `json:"id"`
-	Type       string             `json:"type"`
 	Attributes DogBreedAttributes `json:"attributes"`
 	// Relationships DogBreedRelationships `json:"relationships"`
 }
@@ -52,8 +50,18 @@ type DogBreedMaxMin struct {
 	Min int `json:"min"`
 }
 
-type BreedsByName []DogBreedAttributes
+type GroupsByName []DogGroup
 
-func (db BreedsByName) Len() int           { return len(db) }
-func (db BreedsByName) Less(i, j int) bool { return db[i].Name < db[j].Name }
-func (db BreedsByName) Swap(i, j int)      { db[i], db[j] = db[j], db[i] }
+func (groups GroupsByName) Len() int { return len(groups) }
+func (groups GroupsByName) Less(i, j int) bool {
+	return groups[i].Attributes.Name < groups[j].Attributes.Name
+}
+func (groups GroupsByName) Swap(i, j int) { groups[i], groups[j] = groups[j], groups[i] }
+
+type BreedsByName []DogBreed
+
+func (breeds BreedsByName) Len() int { return len(breeds) }
+func (breeds BreedsByName) Less(i, j int) bool {
+	return breeds[i].Attributes.Name < breeds[j].Attributes.Name
+}
+func (breeds BreedsByName) Swap(i, j int) { breeds[i], breeds[j] = breeds[j], breeds[i] }

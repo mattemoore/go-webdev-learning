@@ -30,21 +30,20 @@ func getDogGroups() ([]DogGroup, error) {
 	for _, group := range data.Data {
 		dogGroups = append(dogGroups, group)
 	}
-	fmt.Printf("Dog groups: %v\n", dogGroups[0])
+
+	sort.Sort(GroupsByName(dogGroups))
 	return dogGroups, nil
 }
 
-func getDogBreeds() ([]DogBreedAttributes, error) {
-	dogBreeds := []DogBreedAttributes{}
+func getDogBreeds(groupID string) ([]DogBreed, error) {
+	dogBreeds := []DogBreed{}
 
-	// Request list of dog breeds
-	resp, err := http.Get("https://dogapi.dog/api/v2/breeds")
+	resp, err := http.Get(fmt.Sprintf("https://dogapi.dog/api/v2/groups/%s", groupID))
 	if err != nil {
 		log.Println(fmt.Println(err))
 		return dogBreeds, err
 	}
 
-	// Read response
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -52,13 +51,40 @@ func getDogBreeds() ([]DogBreedAttributes, error) {
 		return dogBreeds, err
 	}
 
-	// Convert JSON response into map with breeds as keys and sub breeds as values
-	var data DogBreedsApiData
+	var data DogGroupApiData
 	json.Unmarshal(body, &data)
-	for _, breed := range data.Data {
-		dogBreeds = append(dogBreeds, breed.Attributes)
+	for _, breed := range data.Data.Relationships.BreedRelationships.DogBreeds {
+		fullDogBreed, error := getDogBreed(breed.ID)
+		if error != nil {
+			log.Println(fmt.Println(err))
+			return dogBreeds, err
+		}
+		dogBreeds = append(dogBreeds, fullDogBreed)
 	}
+
 	sort.Sort(BreedsByName(dogBreeds))
-	fmt.Printf("Dog breeds: %v\n", dogBreeds[0])
 	return dogBreeds, nil
+}
+
+func getDogBreed(breedID string) (DogBreed, error) {
+	dogBreed := DogBreed{}
+
+	resp, err := http.Get(fmt.Sprintf("https://dogapi.dog/api/v2/breeds/%s", breedID))
+	if err != nil {
+		log.Println(fmt.Println(err))
+		return dogBreed, err
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(fmt.Println(err))
+		return dogBreed, err
+	}
+
+	var data DogBreeedApiData
+	json.Unmarshal(body, &data)
+	dogBreed = data.Data
+
+	return dogBreed, nil
 }

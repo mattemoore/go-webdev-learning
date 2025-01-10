@@ -17,13 +17,13 @@ templ groupsListComponent(dogGroups []DogGroup) {
 	<div id="cardContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, group := range dogGroups {
 			<div class="m-2">
-				@cardComponent(CardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/?groupID=%s", group.ID), "View Breeds", ""})
+				@cardComponent(CardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/%s", group.ID), "View Breeds", ""})
 			</div>
 		}
 	</div>
 }
 
-templ breedsListComponent(dogBreeds []DogBreedAttributes, pageNum int, pageSize int) {
+templ breedsListComponent(groupName string, groupID string, dogBreeds []DogBreed, pageNum int, pageSize int) {
 	{{
 		start := (pageNum - 1) * pageSize
 		end := start + pageSize
@@ -31,30 +31,34 @@ templ breedsListComponent(dogBreeds []DogBreedAttributes, pageNum int, pageSize 
 			end = len(dogBreeds)
 		}
 		numPages := (len(dogBreeds) + pageSize - 1) / pageSize
-		urlFormat := "\\home?pageNum=%d&pageSize%d"
+		rootURL := fmt.Sprintf("\\group\\%s", groupID)
+		// NOTE: The API does not support pagination of this endpoint so we fake it below so we can practice pagination component
+		dogBreedPage := dogBreeds[start:end]
 	}}
+	<h2>{ groupName }</h2>
 	<div id="cardContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
-		for _, breed := range dogBreeds[start:end] {
+		for _, breed := range dogBreedPage {
 			<div class="m-2">
-				@cardComponent(CardComponentData{breed.Name, breed.Name, "foo", "View Breeds", "bar"})
+				@cardComponent(CardComponentData{breed.ID, breed.Attributes.Name, "foo", "View Breeds", ""})
 			</div>
 		}
 	</div>
 	if numPages > 1 {
 		<div class="container m-4">
-			@paginationComponent(pageNum, numPages, pageSize, urlFormat)
+			@paginationComponent(pageNum, numPages, pageSize, rootURL)
 		</div>
 	}
 }
 
-templ paginationComponent(pageNum int, numPages int, pageSize int, pageUrlFormat string) {
+templ paginationComponent(pageNum int, numPages int, pageSize int, rootURL string) {
+	{{ urlFormat := rootURL + "?pageNum=%d&pageSize=%d" }}
 	<nav aria-label="Page navigation example">
 		<ul class="pagination">
-			<li class="page-item"><a class={ "page-link", templ.KV("disabled", pageNum == 1) } href={ templ.URL(fmt.Sprintf(pageUrlFormat, pageNum-1, pageSize)) } role="button">Previous</a></li>
+			<li class="page-item"><a class={ "page-link", templ.KV("disabled", pageNum == 1) } href={ templ.URL(fmt.Sprintf(urlFormat, pageNum-1, pageSize)) } role="button">Previous</a></li>
 			for i := 1; i <= numPages; i++ {
-				<li class="page-item"><a class={ "page-link", templ.KV("disabled", i == pageNum) } href={ templ.URL(fmt.Sprintf(pageUrlFormat, i, pageSize)) } role="button">{ strconv.Itoa(i) }</a></li>
+				<li class="page-item"><a class={ "page-link", templ.KV("disabled", i == pageNum) } href={ templ.URL(fmt.Sprintf(urlFormat, i, pageSize)) } role="button">{ strconv.Itoa(i) }</a></li>
 			}
-			<li class="page-item"><a class={ "page-link", templ.KV("disabled", pageNum == numPages) } href={ templ.URL(fmt.Sprintf(pageUrlFormat, pageNum+1, pageSize)) } role="button">Next</a></li>
+			<li class="page-item"><a class={ "page-link", templ.KV("disabled", pageNum == numPages) } href={ templ.URL(fmt.Sprintf(urlFormat, pageNum+1, pageSize)) } role="button">Next</a></li>
 		</ul>
 	</nav>
 }
