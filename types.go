@@ -1,5 +1,7 @@
 package main
 
+//#region DogGroup types
+
 type DogGroupsApiData struct {
 	Data []DogGroup `json:"data"`
 }
@@ -8,32 +10,36 @@ type DogGroupApiData struct {
 	Data DogGroup `json:"data"`
 }
 
-type DogBreeedApiData struct {
-	Data DogBreed `json:"data"`
-}
-
 type DogGroup struct {
-	ID            string                `json:"id"`
-	Attributes    DogGroupAttributes    `json:"attributes"`
-	Relationships DogGroupRelationships `json:"relationships"`
-}
-
-type DogGroupRelationships struct {
-	BreedRelationships DogGroupBreedRelationships `json:"breeds"`
-}
-
-type DogGroupBreedRelationships struct {
-	DogBreeds []DogBreed `json:"data"`
+	ID            string                       `json:"id"`
+	Attributes    DogGroupAttributes           `json:"attributes"`
+	Relationships DogBreedRelationshipsInGroup `json:"relationships"`
 }
 
 type DogGroupAttributes struct {
 	Name string `json:"name"`
 }
 
+type DogBreedRelationshipsInGroup struct {
+	BreedsHolder DogBreedsInGroup `json:"breeds"`
+}
+
+type DogBreedsInGroup struct {
+	Breeds []DogBreed `json:"data"`
+}
+
+//#endregion
+
+//#region DogBreed types
+
+type DogBreeedApiData struct {
+	Data DogBreed `json:"data"`
+}
+
 type DogBreed struct {
-	ID         string             `json:"id"`
-	Attributes DogBreedAttributes `json:"attributes"`
-	// Relationships DogBreedRelationships `json:"relationships"`
+	ID            string                        `json:"id"`
+	Attributes    DogBreedAttributes            `json:"attributes"`
+	Relationships DogGroupRelationshipsForBreed `json:"relationships"`
 }
 
 type DogBreedAttributes struct {
@@ -43,6 +49,14 @@ type DogBreedAttributes struct {
 	MaleWeight     DogBreedMaxMin `json:"male_weight"`
 	FemaleWeight   DogBreedMaxMin `json:"female_weight"`
 	HypoAllergenic bool           `json:"hypoallergenic"`
+}
+
+type DogGroupRelationshipsForBreed struct {
+	Relationships DogGroup `json:"group"`
+}
+
+type DogGroupForBreed struct {
+	Group DogGroup `json:"data"`
 }
 
 type DogBreedMaxMin struct {
@@ -65,3 +79,5 @@ func (breeds BreedsByName) Less(i, j int) bool {
 	return breeds[i].Attributes.Name < breeds[j].Attributes.Name
 }
 func (breeds BreedsByName) Swap(i, j int) { breeds[i], breeds[j] = breeds[j], breeds[i] }
+
+//#endregion

@@ -13,17 +13,39 @@ type CardComponentData struct {
 	ImageURL    string
 }
 
+templ groupsListHeader() {
+	<h1 class="text-center">Dog Groups</h1>
+}
+
+templ groupsListPlaceholder() {
+	@groupsListHeader()
+	<div id="groupsListPlaceholder" hx-get="/groups" hx-trigger="load" class="mx-auto w-25" hx-swap="outerHTML">
+		<img alt="Result loading..." class="htmx-indicator w-100" src="/static/bars.svg"/>
+	</div>
+}
+
 templ groupsListComponent(dogGroups []DogGroup) {
-	<div id="cardContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
+	<div id="groupsListContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, group := range dogGroups {
 			<div class="m-2">
-				@cardComponent(CardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/%s", group.ID), "View Breeds", ""})
+				@cardComponent(CardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/%s?groupName=%s", group.ID, group.Attributes.Name), "View Breeds", ""})
 			</div>
 		}
 	</div>
 }
 
-templ breedsListComponent(groupName string, groupID string, dogBreeds []DogBreed, pageNum int, pageSize int) {
+templ breedsListHeader(groupName string) {
+	<h1 class="text-center">{ groupName }</h1>
+}
+
+templ breedsListPlaceholder(groupName string, groupID string, pageNum string, pageSize string) {
+	@breedsListHeader(groupName)
+	<div id="breedsListPlaceholder" hx-get={ fmt.Sprintf("/group/list/%s?pageNum=%s&pageSize=%s", groupID, pageNum, pageSize) } hx-trigger="load" class="mx-auto w-25" hx-swap="outerHTML">
+		<img alt="Result loading..." class="htmx-indicator w-100" src="/static/bars.svg"/>
+	</div>
+}
+
+templ breedsListComponent(groupID string, dogBreeds []DogBreed, pageNum int, pageSize int) {
 	{{
 		start := (pageNum - 1) * pageSize
 		end := start + pageSize
@@ -35,8 +57,7 @@ templ breedsListComponent(groupName string, groupID string, dogBreeds []DogBreed
 		// NOTE: The API does not support pagination of this endpoint so we fake it below so we can practice pagination component
 		dogBreedPage := dogBreeds[start:end]
 	}}
-	<h2>{ groupName }</h2>
-	<div id="cardContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
+	<div id="breedsListContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, breed := range dogBreedPage {
 			<div class="m-2">
 				@cardComponent(CardComponentData{breed.ID, breed.Attributes.Name, "foo", "View Breeds", ""})

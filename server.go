@@ -11,16 +11,36 @@ import (
 
 var dogGroups []DogGroup
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	dogBreedsComponent := groupsListComponent(dogGroups)
-	page(dogBreedsComponent).Render(r.Context(), w)
+func groupsPageHandler(w http.ResponseWriter, r *http.Request) {
+	groupsListPlaceholder := groupsListPlaceholder()
+	page(groupsListPlaceholder).Render(r.Context(), w)
 }
 
-func groupHandler(w http.ResponseWriter, r *http.Request) {
+func groupsListHandler(w http.ResponseWriter, r *http.Request) {
+	dogGroups, err := getDogGroups()
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("Error getting dog groups: %s\n", err)))
+	}
+
+	dogBreedsComponent := groupsListComponent(dogGroups)
+	dogBreedsComponent.Render(r.Context(), w)
+}
+
+func breedsPageHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["groupID"]
 	params := r.URL.Query()
 	groupName := params.Get("groupName")
+	pageNum := params.Get("pageNum")
+	pageSize := params.Get("pageSize")
+	breedsListPlaceholder := breedsListPlaceholder(groupName, groupID, pageNum, pageSize)
+	page(breedsListPlaceholder).Render(r.Context(), w)
+}
+
+func breedsListHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID := vars["groupID"]
+	params := r.URL.Query()
 
 	pageNum := 1
 	pageSize := 10
@@ -35,8 +55,8 @@ func groupHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("Error getting dog breeds: %s\n", err)))
 	}
-	dogBreedsComponent := breedsListComponent(groupName, groupID, breedsList, pageNum, pageSize)
-	page(dogBreedsComponent).Render(r.Context(), w)
+	dogBreedsComponent := breedsListComponent(groupID, breedsList, pageNum, pageSize)
+	dogBreedsComponent.Render(r.Context(), w)
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {}
@@ -45,16 +65,12 @@ func main() {
 
 	// Register handlers
 	r := mux.NewRouter()
-	r.HandleFunc("/", homeHandler)
+	r.HandleFunc("/", groupsPageHandler)
+	r.HandleFunc("/groups", groupsListHandler)
+	r.HandleFunc("/group/{groupID}", breedsPageHandler)
+	r.HandleFunc("/group/list/{groupID}", breedsListHandler)
 	r.HandleFunc("/favicon.ico", faviconHandler)
-	r.HandleFunc("/group/{groupID}", groupHandler)
-
-	// Practice golang HTTP and JSON unmarshalling
-	var err error
-	dogGroups, err = getDogGroups()
-	if err != nil {
-		log.Panic(fmt.Printf("Shutting down server:%s\n", err))
-	}
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// Listen and serve
 	log.Fatal(http.ListenAndServe(":8080", r))

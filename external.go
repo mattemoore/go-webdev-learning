@@ -53,7 +53,7 @@ func getDogBreeds(groupID string) ([]DogBreed, error) {
 
 	var data DogGroupApiData
 	json.Unmarshal(body, &data)
-	for _, breed := range data.Data.Relationships.BreedRelationships.DogBreeds {
+	for _, breed := range data.Data.Relationships.BreedsHolder.Breeds {
 		fullDogBreed, error := getDogBreed(breed.ID)
 		if error != nil {
 			log.Println(fmt.Println(err))
