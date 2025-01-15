@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-type CardComponentData struct {
+type cardComponentData struct {
 	Title       string
 	Text        string
 	URL         string
@@ -17,7 +17,7 @@ templ groupsListHeader() {
 	<h1 class="text-center">Dog Groups</h1>
 }
 
-templ groupsListPlaceholder() {
+templ groupsListContainer() {
 	@groupsListHeader()
 	<div id="groupsListPlaceholder" hx-get="/groups" hx-trigger="load" class="mx-auto w-25" hx-swap="outerHTML">
 		<img alt="Result loading..." class="htmx-indicator w-100" src="/static/bars.svg"/>
@@ -28,7 +28,7 @@ templ groupsListComponent(dogGroups []DogGroup) {
 	<div id="groupsListContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, group := range dogGroups {
 			<div class="m-2">
-				@cardComponent(CardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/%s?groupName=%s", group.ID, group.Attributes.Name), "View Breeds", ""})
+				@cardComponent(cardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/%s?groupName=%s", group.ID, group.Attributes.Name), "View Breeds", ""}, false)
 			</div>
 		}
 	</div>
@@ -38,7 +38,7 @@ templ breedsListHeader(groupName string) {
 	<h1 class="text-center">{ groupName }</h1>
 }
 
-templ breedsListPlaceholder(groupName string, groupID string, pageNum string, pageSize string) {
+templ breedsListContainer(groupName string, groupID string, pageNum string, pageSize string) {
 	@breedsListHeader(groupName)
 	<div id="breedsListPlaceholder" hx-get={ fmt.Sprintf("/group/list/%s?pageNum=%s&pageSize=%s", groupID, pageNum, pageSize) } hx-trigger="load" class="mx-auto w-25" hx-swap="outerHTML">
 		<img alt="Result loading..." class="htmx-indicator w-100" src="/static/bars.svg"/>
@@ -60,7 +60,7 @@ templ breedsListComponent(groupID string, dogBreeds []DogBreed, pageNum int, pag
 	<div id="breedsListContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, breed := range dogBreedPage {
 			<div class="m-2">
-				@cardComponent(CardComponentData{breed.ID, breed.Attributes.Name, "foo", "View Breeds", ""})
+				@cardComponent(cardComponentData{breed.Attributes.Name, formatBreedDescription(breed), fmt.Sprintf("/breed/%s", breed.ID), "View Breed", ""}, true)
 			</div>
 		}
 	</div>
@@ -84,7 +84,7 @@ templ paginationComponent(pageNum int, numPages int, pageSize int, rootURL strin
 	</nav>
 }
 
-templ cardComponent(cardData CardComponentData) {
+templ cardComponent(cardData cardComponentData, isModal bool) {
 	<div class="card" style="width: 18rem">
 		if (cardData.ImageURL != "") {
 			<img src={ cardData.ImageURL } class="card-img-top" alt="..."/>
@@ -94,7 +94,36 @@ templ cardComponent(cardData CardComponentData) {
 			if (cardData.Text != "") {
 				<p class="card-text">{ cardData.Text }</p>
 			}
-			<a href={ templ.SafeURL(cardData.URL) } class="btn btn-primary">{ cardData.ButtonLabel }</a>
+			if (isModal) {
+				// No hx-get as we already have the breed info at this point
+				<button
+					hx-target="#modals-here"
+					hx-trigger="click"
+					data-bs-toggle="modal"
+					data-bs-target="#modals-here"
+					class="btn btn-primary"
+				>{ cardData.ButtonLabel }</button>
+				<div id="modals-here" class="modal fade" tabindex="-1" role="dialog">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">{ cardData.Title }</h5>
+								<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<p>{ cardData.Text }</p>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			} else {
+				<a href={ templ.SafeURL(cardData.URL) } class="btn btn-primary">{ cardData.ButtonLabel }</a>
+			}
 		</div>
 	</div>
 }
@@ -159,4 +188,8 @@ templ navbar() {
 			</div>
 		</div>
 	</nav>
+}
+
+func formatBreedDescription(breed DogBreed) string {
+	return fmt.Sprintf("%s</br>Male Weight: %d-%d</br> ", breed.Attributes.Description, breed.Attributes.MaleWeight.Min, breed.Attributes.MaleWeight.Max)
 }

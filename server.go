@@ -12,7 +12,7 @@ import (
 var dogGroups []DogGroup
 
 func groupsPageHandler(w http.ResponseWriter, r *http.Request) {
-	groupsListPlaceholder := groupsListPlaceholder()
+	groupsListPlaceholder := groupsListContainer()
 	page(groupsListPlaceholder).Render(r.Context(), w)
 }
 
@@ -33,7 +33,7 @@ func breedsPageHandler(w http.ResponseWriter, r *http.Request) {
 	groupName := params.Get("groupName")
 	pageNum := params.Get("pageNum")
 	pageSize := params.Get("pageSize")
-	breedsListPlaceholder := breedsListPlaceholder(groupName, groupID, pageNum, pageSize)
+	breedsListPlaceholder := breedsListContainer(groupName, groupID, pageNum, pageSize)
 	page(breedsListPlaceholder).Render(r.Context(), w)
 }
 
@@ -59,6 +59,17 @@ func breedsListHandler(w http.ResponseWriter, r *http.Request) {
 	dogBreedsComponent.Render(r.Context(), w)
 }
 
+// func breedHandler(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	breedID := vars["breedID"]
+// 	breed, err := getDogBreed(breedID)
+// 	if err != nil {
+// 		w.Write([]byte(fmt.Sprintf("Error getting dog breed: %s\n", err)))
+// 	}
+// 	breedComponent := breedComponent(breed)
+// 	breedComponent.Render(r.Context(), w)
+// }
+
 func faviconHandler(w http.ResponseWriter, r *http.Request) {}
 
 func main() {
@@ -69,6 +80,7 @@ func main() {
 	r.HandleFunc("/groups", groupsListHandler)
 	r.HandleFunc("/group/{groupID}", breedsPageHandler)
 	r.HandleFunc("/group/list/{groupID}", breedsListHandler)
+	// r.HandleFunc("/breed/{breedID}", breedHandler)
 	r.HandleFunc("/favicon.ico", faviconHandler)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
