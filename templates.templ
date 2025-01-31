@@ -7,7 +7,7 @@ import (
 
 type cardComponentData struct {
 	Title       string
-	Text        string
+	Text        templ.Component
 	URL         string
 	ButtonLabel string
 	ImageURL    string
@@ -28,7 +28,7 @@ templ groupsListComponent(dogGroups []DogGroup) {
 	<div id="groupsListContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, group := range dogGroups {
 			<div class="m-2">
-				@cardComponent(cardComponentData{group.Attributes.Name, "", fmt.Sprintf("/group/%s?groupName=%s", group.ID, group.Attributes.Name), "View Breeds", ""}, false)
+				@cardComponent(cardComponentData{group.Attributes.Name, nil, fmt.Sprintf("/group/%s?groupName=%s", group.ID, group.Attributes.Name), "View Breeds", ""}, false)
 			</div>
 		}
 	</div>
@@ -60,7 +60,7 @@ templ breedsListComponent(groupID string, dogBreeds []DogBreed, pageNum int, pag
 	<div id="breedsListContainer" class="container d-flex flex-row flex-wrap justify-content-center m-4">
 		for _, breed := range dogBreedPage {
 			<div class="m-2">
-				@cardComponent(cardComponentData{breed.Attributes.Name, formatBreedDescription(breed), fmt.Sprintf("/breed/%s", breed.ID), "View Breed", ""}, true)
+				@cardComponent(cardComponentData{breed.Attributes.Name, breedDescription(breed), fmt.Sprintf("/breed/%s", breed.ID), "View Breed", ""}, true)
 			</div>
 		}
 	</div>
@@ -91,8 +91,8 @@ templ cardComponent(cardData cardComponentData, isModal bool) {
 		}
 		<div class="card-body">
 			<h5 class="card-title">{ cardData.Title }</h5>
-			if (cardData.Text != "") {
-				<p class="card-text">{ cardData.Text }</p>
+			if (cardData.Text != nil) {
+				@cardData.Text
 			}
 			if (isModal) {
 				// No hx-get as we already have the breed info at this point
@@ -113,7 +113,9 @@ templ cardComponent(cardData cardComponentData, isModal bool) {
 								</button>
 							</div>
 							<div class="modal-body">
-								<p>{ cardData.Text }</p>
+								<div>
+									@cardData.Text
+								</div>
 							</div>
 							<div class="modal-footer">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -190,6 +192,24 @@ templ navbar() {
 	</nav>
 }
 
-func formatBreedDescription(breed DogBreed) string {
-	return fmt.Sprintf("%s</br>Male Weight: %d-%d</br> ", breed.Attributes.Description, breed.Attributes.MaleWeight.Min, breed.Attributes.MaleWeight.Max)
+var helloHandle = templ.NewOnceHandle()
+
+templ breedDescription(breed DogBreed) {
+	@helloHandle.Once() {
+		<script type="text/javascript">
+			function hello(name) {
+				alert('Hello, ' + name + '!');
+			}
+		</script>
+	}
+	<p>{ breed.Attributes.Description }</p>
+	<p>
+		Male Weight: { strconv.Itoa(breed.Attributes.MaleWeight.Min) } - { strconv.Itoa(breed.Attributes.MaleWeight.Max) }
+		<br/>
+		Female Weight:{ strconv.Itoa(breed.Attributes.FemaleWeight.Min) } - { strconv.Itoa(breed.Attributes.FemaleWeight.Max) }
+		<br/>
+		Life Span: { strconv.Itoa(breed.Attributes.Life.Min) } - { strconv.Itoa(breed.Attributes.Life.Max) }
+		<br/>
+		Hypoallergenic: <input class="form-check-input" type="checkbox" checked?={ breed.Attributes.HypoAllergenic } onclick="hello('foo')"/>
+	</p>
 }
