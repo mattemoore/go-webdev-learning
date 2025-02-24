@@ -11,7 +11,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var dogGroups []DogGroup
+var redisClient *redis.Client
+var ctx context.Context
 
 func groupsPageHandler(w http.ResponseWriter, r *http.Request) {
 	groupsListPlaceholder := groupsListContainer()
@@ -86,9 +87,9 @@ func newRedisClient() *redis.Client {
 func main() {
 
 	// Create redis client
-	redisClient := newRedisClient()
-	ctx := context.Background()
-	fmt.Printf("Redis client created: %s\n", redisClient.Get(ctx, "bike:1"))
+	redisClient = newRedisClient()
+	ctx = context.Background()
+	fmt.Printf("Redis client created: %v\n", redisClient)
 	defer redisClient.Close()
 
 	// Register handlers

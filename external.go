@@ -10,6 +10,10 @@ import (
 )
 
 func getDogGroups() ([]DogGroup, error) {
+
+	v := redisClient.Get(ctx, "bike:1")
+	fmt.Printf("%s\n", v)
+
 	dogGroups := []DogGroup{}
 
 	resp, err := http.Get("https://dogapi.dog/api/v2/groups")
@@ -27,13 +31,18 @@ func getDogGroups() ([]DogGroup, error) {
 
 	var data DogGroupsApiData
 	json.Unmarshal(body, &data)
-	for _, group := range data.Data {
-		dogGroups = append(dogGroups, group)
-	}
+	dogGroups = append(dogGroups, data.Data...)
 
 	sort.Sort(GroupsByName(dogGroups))
+
+	// cacheDogGroups(dogGroups)
+
 	return dogGroups, nil
 }
+
+// func cacheDogGroups(dogGroups []DogGroup) {
+// 	redis.
+// }
 
 func getDogBreeds(groupID string) ([]DogBreed, error) {
 	dogBreeds := []DogBreed{}
