@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/redis/go-redis/v9"
 )
 
 var dogGroups []DogGroup
@@ -72,7 +74,22 @@ func breedsListHandler(w http.ResponseWriter, r *http.Request) {
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {}
 
+func newRedisClient() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // No password set
+		DB:       0,  // Use default DB
+		Protocol: 2,  // Connection protocol
+	})
+}
+
 func main() {
+
+	// Create redis client
+	redisClient := newRedisClient()
+	ctx := context.Background()
+	fmt.Printf("Redis client created: %s\n", redisClient.Get(ctx, "bike:1"))
+	defer redisClient.Close()
 
 	// Register handlers
 	r := mux.NewRouter()
