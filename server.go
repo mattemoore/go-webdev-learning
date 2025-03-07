@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
@@ -84,6 +85,14 @@ func newRedisClient() *redis.Client {
 	})
 }
 
+func timerMiddleware(wrappedFunc func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wrappedFunc(w, r)
+		log.Printf("Request took %s", time.Since(start))
+	}
+}
+
 func main() {
 
 	// Create redis client
@@ -94,7 +103,7 @@ func main() {
 
 	// Register handlers
 	r := mux.NewRouter()
-	r.HandleFunc("/", groupsPageHandler)
+	r.HandleFunc("/", timerMiddleware(groupsPageHandler))
 	r.HandleFunc("/groups", groupsListHandler)
 	r.HandleFunc("/group/{groupID}", breedsPageHandler)
 	r.HandleFunc("/group/list/{groupID}", breedsListHandler)
